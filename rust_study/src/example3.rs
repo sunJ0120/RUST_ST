@@ -29,4 +29,26 @@ pub fn run() {
     let first = a[0];
     let second = a[1];
     println!("The first element is: {first}");
+
+    // 함수
+    another_function(5);
+
+    // 구문과 표현식
+    let y = {
+        let x = 3;
+        x + 1
+    };
+    println!("The value of y is: {y}");
+
+    // 반환 값을 갖는 함수
+    let z = five();
+    println!("The value of z is: {z}");
+}
+
+fn another_function(x: i32) {
+    println!("Another function! x value is: {x}");
+}
+
+fn five() -> i32 {
+    5
 }
