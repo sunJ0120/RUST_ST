@@ -37,6 +37,15 @@ pub fn run(){
     // let dangling_ref = dangle();
     let dangling_ref = no_dangle();
     println!("댕글링 참조 방지: {}", dangling_ref);
+
+    // 공백으로 구분해서 첫 번째 단어를 반환하는 함수
+    let mut my_string = String::from("hello world !");
+    let word = first_word(&my_string);
+    // println!("첫 번째 단어: {}", word);
+
+    // 슬라이스 후 원본 단어 없애기
+    my_string.clear();
+    println!("첫 번째 단어: {}", word);
 }
 
 fn function_scope(a_str: String) -> String {
@@ -57,4 +66,16 @@ fn rental_scope(b: &mut String) {
 fn no_dangle () -> String {
     let s = String::from("hello");
     s
+}
+
+fn first_word(s: &String) -> &str {
+    let bytes = s.as_bytes();    // String을 하나하나 쪼개서 해당 요소가 공백 값인지 확인해야 하므로, as_bytes 메서드를 이용해 바이트 배열로 변환
+
+    for (i, &item) in bytes.iter().enumerate() {    // enumerate()로 감싸기, 인덱스와 참조자
+        if item == b' ' {    // 참조자가 가리키는 값이 공백(b' ')인지 확인
+            return &s[0..i];    // 공백 전까지 프린트
+        }
+    }
+
+    &s[..]
 }
