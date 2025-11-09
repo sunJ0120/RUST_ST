@@ -39,12 +39,10 @@ pub fn run(){
     println!("댕글링 참조 방지: {}", dangling_ref);
 
     // 공백으로 구분해서 첫 번째 단어를 반환하는 함수
-    let mut my_string = String::from("hello world !");
+    let my_string = String::from("hello world !");
     let word = first_word(&my_string);
     // println!("첫 번째 단어: {}", word);
 
-    // 슬라이스 후 원본 단어 없애기
-    my_string.clear();
     println!("첫 번째 단어: {}", word);
 }
 
