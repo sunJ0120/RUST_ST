@@ -4,27 +4,47 @@ struct Rectangle {
     height: u32,
 }
 
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    fn set_width(&mut self, width: u32) {
+        self.width = width;
+    }
+
+    fn width(&self) -> bool {
+        self.width > 0
+    }
+}
+
 pub fn run(){
     let width = 30;
     let height = 50;
 
-    // let rect1 = (width, height);
-    let scale = 2;
-    let rect1 = Rectangle{
-        width: dbg!(30 * scale),
-        height: 50,
+    let mut rect = Rectangle{
+        width: 10,
+        height: 40,
     };
 
     println!(
         "The area of the rectangle is {} square pixels.",
-        // area(width, height)
-        area(&rect1)
+        rect.area()
     );
 
-    println!("rect1 is {:#?}", rect1);
-    dbg!(&rect1);
-}
+    rect.set_width(40);
 
-fn area(rectangle: &Rectangle) -> u32 {
-    rectangle.width * rectangle.height
+    println!(
+        "Changing width {}",
+        rect .area()
+    );
+
+    if rect.width() {
+        println!("Width is non-zero");
+    } else {
+        println!("Width is zero");
+    }
+
+    println!("rect is {:#?}", rect);
+    dbg!(&rect);
 }
