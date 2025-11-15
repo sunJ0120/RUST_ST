@@ -30,6 +30,19 @@ impl Store{
 
         data.get(key).cloned()
     }
+
+    // DEL 명령어
+    pub fn del(&self, key: &str) -> String {
+        let mut data = self.data
+            .lock()
+            .expect("🦀 락을 얻는데 실패하였습니다.");
+
+        if data.remove(key).is_some(){
+            "1".to_string()
+        } else {
+            "0".to_string()
+        }
+    }
 }
 
 // 테스트
@@ -49,5 +62,21 @@ mod tests {
         let store = Store::new();
         let result = store.get("not_exist");
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_del_existing_key() {
+        let store = Store::new();
+        store.set("key", "rudis");
+
+        let result = store.del("key");
+        assert_eq!(result, "1".to_string());
+    }
+
+    #[test]
+    fn test_del_nonexistent_key() {
+        let store = Store::new();
+        let result = store.del("not_exist");
+        assert_eq!(result, "0".to_string());
     }
 }
