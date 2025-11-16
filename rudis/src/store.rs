@@ -65,7 +65,7 @@ impl Store{
 
     // EXPIRE
     pub fn expire(&self, key: &str, seconds: i64) -> i64 {
-        let mut data = self.data
+        let data = self.data
             .lock()
             .expect("🦀 락을 얻는데 실패하였습니다.");
 
