@@ -89,7 +89,7 @@ impl Store{
         }
 
         let Some(&expire_time) = expiry.get(key) else {
-            return -1;    // 만료 시간 없음
+            return -1;  // 만료 시간이 설정되지 않음
         };
 
         // 남은 시간 계산
@@ -99,6 +99,33 @@ impl Store{
         }
 
         expire_time.duration_since(now).as_secs() as i64
+    }
+
+    // key 만료 확인
+    fn is_expired(&self, key: &str) -> bool {
+        let expiry = self.expiry
+            .lock()
+            .expect("🦀 락을 얻는데 실패하였습니다.");
+
+        if let Some(&expire_time) = expiry.get(key) {
+            Instant::now() >= expire_time
+        } else {
+            false
+        }
+    }
+
+    // 만료된 key를 삭제
+    fn delete_expired(&self, key: &str) {
+        let mut data = self.data
+            .lock()
+            .expect("🦀 락을 얻는데 실패하였습니다.");
+
+        let mut expiry = self.expiry
+            .lock()
+            .expect("🦀 락을 얻는데 실패하였습니다.");
+
+        data.remove(key);
+        expiry.remove(key);
     }
 }
 
