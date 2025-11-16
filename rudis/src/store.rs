@@ -20,13 +20,24 @@ impl Store{
         let mut data = self.data
             .lock()
             .expect("🦀 락을 얻는데 실패하였습니다.");
+
+        let mut expiry = self.expiry
+            .lock()
+            .expect("🦀 락을 얻는데 실패하였습니다.");
+
         data.insert(key.to_string(), value.to_string());
+        expiry.remove(key);
 
         "OK".to_string()
     }
 
     // GET 명령어
     pub fn get(&self, key: &str) -> Option<String> {
+        if self.is_expired(key) {
+            self.del(key);
+            return None;
+        }
+
         let data = self.data
             .lock()
             .expect("🦀 락을 얻는데 실패하였습니다.");
@@ -40,7 +51,12 @@ impl Store{
             .lock()
             .expect("🦀 락을 얻는데 실패하였습니다.");
 
-        if data.remove(key).is_some(){
+        let mut expiry = self.expiry
+            .lock()
+            .expect("🦀 락을 얻는데 실패하였습니다.");
+
+        if data.remove(key).is_some() {
+            expiry.remove(key);
             1
         } else {
             0
@@ -113,25 +129,13 @@ impl Store{
             false
         }
     }
-
-    // 만료된 key를 삭제
-    fn delete_expired(&self, key: &str) {
-        let mut data = self.data
-            .lock()
-            .expect("🦀 락을 얻는데 실패하였습니다.");
-
-        let mut expiry = self.expiry
-            .lock()
-            .expect("🦀 락을 얻는데 실패하였습니다.");
-
-        data.remove(key);
-        expiry.remove(key);
-    }
 }
 
 // 테스트
 #[cfg(test)]
 mod tests {
+    use std::thread;
+    use std::time::Duration;
     use super::Store;
 
     #[test]
@@ -142,10 +146,28 @@ mod tests {
     }
 
     #[test]
+    fn test_set_init_expire(){
+        let store = Store::new();
+        store.set("key", "rudis");
+        assert_eq!(store.ttl("key"), -1);
+    }
+
+    #[test]
     fn test_get_nonexistent_key(){
         let store = Store::new();
         let result = store.get("not_exist");
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_get_expired_key(){
+        let store = Store::new();
+        store.set("key", "rudis");
+        store.expire("key", 1);
+
+        assert_eq!(store.get("key"), Some("rudis".to_string()));
+        thread::sleep(Duration::from_secs(2));
+        assert_eq!(store.get("key"), None);
     }
 
     #[test]
@@ -186,11 +208,13 @@ mod tests {
     }
 
     #[test]
-    fn test_ttl_no_expire(){
+    fn test_ttl_after_expire(){
         let store = Store::new();
         store.set("key", "rudis");
+        store.expire("key", 1);
 
-        assert_eq!(store.ttl("key"), -1);
+        thread::sleep(Duration::from_secs(2));
+        assert_eq!(store.ttl("key"), 0);    // Lazy deletion이라 0이 나와야 한다.
     }
 
     #[test]
