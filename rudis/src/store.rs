@@ -73,6 +73,33 @@ impl Store{
 
         1    // 성공
     }
+
+    // TTL
+    pub fn ttl(&self, key: &str) -> i64{
+        let data = self.data
+            .lock()
+            .expect("🦀 락을 얻는데 실패하였습니다.");
+
+        let expiry = self.expiry
+            .lock()
+            .expect("🦀 락을 얻는데 실패하였습니다.");
+
+        if !data.contains_key(key) {
+            return -2;
+        }
+
+        let Some(&expire_time) = expiry.get(key) else {
+            return -1;    // 만료 시간 없음
+        };
+
+        // 남은 시간 계산
+        let now = Instant::now();
+        if now >= expire_time {
+            return 0;    // 만료는 곧 삭제 예정
+        }
+
+        expire_time.duration_since(now).as_secs() as i64
+    }
 }
 
 // 테스트
@@ -122,5 +149,30 @@ mod tests {
     fn test_expire_nonexistent(){
         let store = Store::new();
         assert_eq!(store.expire("not_exist", 10), 0);
+    }
+
+    // TTL TEST
+    #[test]
+    fn test_ttl_nonexistent(){
+        let store = Store::new();
+        assert_eq!(store.ttl("not_exist"), -2);
+    }
+
+    #[test]
+    fn test_ttl_no_expire(){
+        let store = Store::new();
+        store.set("key", "rudis");
+
+        assert_eq!(store.ttl("key"), -1);
+    }
+
+    #[test]
+    fn test_ttl_with_expire(){
+        let store = Store::new();
+        store.set("key", "rudis");
+        store.expire("key", 10);
+
+        let ttl = store.ttl("key");
+        assert!(ttl > 0 && ttl <= 10);
     }
 }
