@@ -1,3 +1,5 @@
+use crate::Store;
+
 #[derive(Debug, PartialEq)]
 pub enum Command {
     Set { key: String, value: String },
@@ -10,6 +12,7 @@ pub enum Command {
 }
 
 impl Command {
+    // CLI에서 입력된 문자열을 Command enum으로 파싱하는 함수
     pub fn parse(input: &str) -> Result<Command, String> {
         let parts: Vec<&str> = input.trim().split_whitespace().collect();
 
@@ -46,6 +49,42 @@ impl Command {
             [] => Err("빈 명령어 입니다.".to_string()),
 
             _ => Ok(Command::Unknown),
+        }
+    }
+
+    // 명령어를 실행하는 함수
+    pub fn execute(&self, store: &Store) -> String {
+        match self {
+            Command::Set { key, value } => {
+                store.set(key.as_str(), value.as_str())
+            }
+
+            Command::Get { key} => {
+                match store.get(key.as_str()) {
+                    Some(value) => value,
+                    None => "(nil)".to_string(),
+                }
+            }
+
+            Command::Del { key} => {
+                store.del(key.as_str()).to_string()
+            }
+
+            Command::Expire { key, seconds } => {
+                store.expire(key.as_str(), *seconds).to_string()
+            }
+
+            Command::Ttl { key } => {
+                store.ttl(key.as_str()).to_string()
+            }
+
+            Command::Exit => {
+                "🦀 Rudis를 종료합니다.".to_string()
+            }
+
+            Command::Unknown => {
+                "👀 알 수 없는 명령어 입니다.".to_string()
+            }
         }
     }
 }
