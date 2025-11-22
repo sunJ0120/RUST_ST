@@ -6,7 +6,9 @@ pub async fn run() {
 
     loop{
         let (socket, _) = listner.accept().await.unwrap();
-        process(socket).await;
+        tokio::spawn( async move {
+            process(socket).await;
+        });
     }
 }
 
