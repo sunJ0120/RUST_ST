@@ -9,13 +9,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut stream = match TcpStream::connect("127.0.0.1:6379").await {
         Ok(s) => {
-            println!("✅ 서버 연결 성공!");
+            println!("🥳 서버 연결 성공!");
             println!("종료를 원하시면 'EXIT'를 눌러주세요.");
             println!();
             s
         },
         Err(e) => {
-            eprintln!("❌ 서버 연결 실패: {}", e);
+            eprintln!("😭 서버 연결 실패: {}", e);
             return Err(e.into());
         }
     };
@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         match io::stdin().read_line(&mut input) {
             Ok(_) => {},
             Err(e) => {
-                eprintln!("입력 하신 것을 읽는데 실패하였습니다. : {}", e);
+                eprintln!("😭 입력 하신 것을 읽는데 실패하였습니다. : {}", e);
                 continue;
             }
         }
@@ -42,13 +42,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Exit 처리
         if input.eq_ignore_ascii_case("EXIT") {
-            println!("👋 Rudis CLI를 종료합니다.");
+            println!("🦀 Rudis CLI를 종료합니다.");
             break;
         }
 
         // 서버로 명령 전송
         if let Err(e) = stream.write_all(format!("{}\n", input).as_bytes()).await {
-            eprintln!("서버로 명령 전송 실패: {}", e);
+            eprintln!("😭 서버로 명령 전송 실패: {}", e);
             break;
         }
 
@@ -56,12 +56,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut buf = vec![0; 1024];
         let n = match stream.read(&mut buf).await {
             Ok(0) => {
-                eprintln!("서버 연결이 종료되었습니다.");
+                eprintln!("🦀 서버 연결이 종료되었습니다.");
                 break;
             },
             Ok(n) => n,
             Err(e) => {
-                eprintln!("서버 응답 읽기 실패: {}", e);
+                eprintln!("😭 서버 응답 읽기 실패: {}", e);
                 break;
             }
         };
