@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
-use rudis::{Command, Store};
+use rudis::{Command, RespValue, Store};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>>{
@@ -44,8 +44,32 @@ async fn handle_connection(
         let input = String::from_utf8_lossy(&buf[..n]);
         let input = input.trim();
 
+        // RESP 형식인지 확인하고 파싱 하도록 지원
+        let _command_string = if input.starts_with('*') {
+            match RespValue::parse(input) {
+                Ok(resp) => {
+                    match resp.to_command_string() {
+                        Ok(cmd) => cmd,
+                        Err(e) => {
+                            let error_resp = format!("-ERR {}\r\n", e);
+                            let _ = socket.write_all(error_resp.as_bytes()).await;
+                            continue;
+                        }
+                    }
+                }
+                Err(e) => {
+                    let error_resp = format!("-ERR RESP 파싱 실패: {}\r\n", e);
+                    let _ = socket.write_all(error_resp.as_bytes()).await;
+                    continue;
+                }
+            }
+        } else {
+            println!("📝 일반 텍스트 명령");
+            input.to_string()
+        };
+
         // 기존의 Command 활용해서 파싱
-        match Command::parse(input) {
+        match Command::parse(&_command_string) {
             Ok(cmd) => {
                 let response = cmd.execute(&store);
                 let resp_response = to_resp_format(&response);
